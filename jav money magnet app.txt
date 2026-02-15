@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MoneyMagnet - Finance Tracker</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://unpkg.com/feather-icons"></script>
+
+</head>
+<body class="bg-gray-100 min-h-screen">
+
+<!-- NAVBAR -->
+<nav class="bg-blue-700 text-white p-4">
+  <div class="container mx-auto flex justify-between">
+    <h1 class="text-xl font-bold flex items-center gap-2">
+      <i data-feather="dollar-sign"></i> MoneyMagnet
+    </h1>
+  </div>
+</nav>
+
+<div class="container mx-auto p-6">
+
+  <!-- SUMMARY -->
+  <div class="grid md:grid-cols-3 gap-6 mb-8">
+    <div class="bg-white p-6 rounded shadow">
+      <p class="text-gray-500">Total Income</p>
+      <h2 id="totalIncome" class="text-2xl font-bold text-green-600">Rp 0</h2>
+    </div>
+    <div class="bg-white p-6 rounded shadow">
+      <p class="text-gray-500">Total Expense</p>
+      <h2 id="totalExpense" class="text-2xl font-bold text-red-600">Rp 0</h2>
+    </div>
+    <div class="bg-white p-6 rounded shadow">
+      <p class="text-gray-500">Net Profit</p>
+      <h2 id="netProfit" class="text-2xl font-bold text-blue-600">Rp 0</h2>
+    </div>
+  </div>
+
+  <!-- FORM -->
+  <div class="bg-white p-6 rounded shadow mb-8">
+    <h2 class="text-lg font-bold mb-4">Add Transaction</h2>
+    <form id="transactionForm" class="grid md:grid-cols-2 gap-4">
+
+      <select id="type" class="border p-2 rounded">
+        <option value="Income">Income</option>
+        <option value="Expense">Expense</option>
+      </select>
+
+      <input type="text" id="category" placeholder="Category" class="border p-2 rounded" required>
+
+      <input type="text" id="description" placeholder="Description" class="border p-2 rounded" required>
+
+      <input type="number" id="amount" placeholder="Amount" class="border p-2 rounded" required>
+
+      <textarea id="notes" placeholder="Notes" class="border p-2 rounded md:col-span-2"></textarea>
+
+      <button type="submit" class="bg-blue-600 text-white p-2 rounded md:col-span-2 hover:bg-blue-700 flex justify-center items-center gap-2">
+        <i data-feather="plus"></i> Add Transaction
+      </button>
+
+    </form>
+  </div>
+
+  <!-- TABLE -->
+  <div class="bg-white p-6 rounded shadow mb-8">
+    <h2 class="text-lg font-bold mb-4">Transaction List</h2>
+
+    <div class="overflow-x-auto">
+      <table class="w-full border">
+        <thead class="bg-gray-200">
+          <tr>
+            <th class="p-2">Type</th>
+            <th class="p-2">Category</th>
+            <th class="p-2">Description</th>
+            <th class="p-2">Amount</th>
+            <th class="p-2">Notes</th>
+            <th class="p-2">Action</th>
+          </tr>
+        </thead>
+        <tbody id="transactionTable"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- CHART -->
+  <div class="bg-white p-6 rounded shadow">
+    <h2 class="text-lg font-bold mb-4">Income vs Expense</h2>
+    <div class="w-full md:w-1/2 mx-auto">
+  <canvas id="financeChart"></canvas>
+</div>
+  <!-- Footer -->
+  <footer class="bg-gray-800 text-white py-8 mt-12">
+    <div class="container mx-auto px-4 text-center">
+      <p class="text-gray-400 text-sm">© 2025 MoneyMagnet. All rights reserved.
+<p class="text-gray-400 text-sm"> Copyright BY ARIF</p>
+    </div>
+  </footer>
+
+<script>
+feather.replace();
+
+const form = document.getElementById("transactionForm");
+const table = document.getElementById("transactionTable");
+const totalIncomeEl = document.getElementById("totalIncome");
+const totalExpenseEl = document.getElementById("totalExpense");
+const netProfitEl = document.getElementById("netProfit");
+
+let transactions = [];
+
+// Chart
+const ctx = document.getElementById("financeChart").getContext("2d");
+const financeChart = new Chart(ctx, {
+  type: "doughnut",
+  data: {
+    labels: ["Income", "Expense"],
+    datasets: [{
+      data: [0,0],
+      backgroundColor: ["#16a34a", "#dc2626"]
+    }]
+  }
+});
+
+// Submit Form
+form.addEventListener("submit", function(e){
+  e.preventDefault();
+
+  const type = document.getElementById("type").value;
+  const category = document.getElementById("category").value;
+  const description = document.getElementById("description").value;
+  const amount = parseFloat(document.getElementById("amount").value);
+  const notes = document.getElementById("notes").value;
+
+  if(amount <= 0) return;
+
+  transactions.push({type, category, description, amount, notes});
+  renderData();
+  form.reset();
+});
+
+// Render Data
+function renderData(){
+  table.innerHTML = "";
+
+  let totalIncome = 0;
+  let totalExpense = 0;
+
+  transactions.forEach((t, index) => {
+
+    if(t.type === "Income"){
+      totalIncome += t.amount;
+    } else {
+      totalExpense += t.amount;
+    }
+
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td class="p-2">${t.type}</td>
+      <td class="p-2">${t.category}</td>
+      <td class="p-2">${t.description}</td>
+      <td class="p-2 ${t.type==="Income" ? "text-green-600" : "text-red-600"} font-bold">
+        Rp ${t.amount.toLocaleString()}
+      </td>
+      <td class="p-2">${t.notes}</td>
+      <td class="p-2">
+        <button onclick="deleteTransaction(${index})"
+          class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 flex items-center gap-1">
+          <i data-feather="trash-2" class="w-4 h-4"></i>
+        </button>
+      </td>
+    `;
+    table.appendChild(row);
+  });
+
+  totalIncomeEl.textContent = "Rp " + totalIncome.toLocaleString();
+  totalExpenseEl.textContent = "Rp " + totalExpense.toLocaleString();
+  netProfitEl.textContent = "Rp " + (totalIncome - totalExpense).toLocaleString();
+
+  financeChart.data.datasets[0].data = [totalIncome, totalExpense];
+  financeChart.update();
+
+  feather.replace();
+}
+
+// Delete
+function deleteTransaction(index){
+  if(confirm("Yakin ingin hapus transaksi ini?")){
+    transactions.splice(index,1);
+    renderData();
+  }
+}
+</script>
+
+</body>
+</html>
