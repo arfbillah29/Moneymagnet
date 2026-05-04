@@ -1,0 +1,27 @@
+/* style.css - MoneyMagnet Custom Styles */
+
+/* Styling tambahan di luar Tailwind bisa ditambahkan di sini */
+
+/* Contoh: Transisi tombol delete */
+button {
+  transition: background-color 0.2s ease;
+}
+
+/* Styling tabel agar lebih rapi */
+table {
+  border-collapse: collapse;
+}
+
+th, td {
+  text-align: center;
+}
+
+/* Chart container responsif */
+canvas {
+  max-width: 100%;
+}
+
+/* Footer selalu di bawah */
+footer {
+  margin-top: auto;
+}
