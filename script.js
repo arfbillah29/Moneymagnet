@@ -10,27 +10,52 @@ const totalIncomeEl = document.getElementById("totalIncome");
 const totalExpenseEl = document.getElementById("totalExpense");
 const netProfitEl = document.getElementById("netProfit");
 
-// Array simpan transaksi
+// Array transaksi
 let transactions = [];
-     function saveData() {
-       localStorage.setItem("Transaction", JSON.stringify(transaction));
-     }
-saveData();
 
-// Inisialisasi Chart
+/* =========================
+   LOCAL STORAGE FUNCTIONS
+========================= */
+
+// simpan data ke localStorage
+function saveData() {
+  localStorage.setItem("transactions", JSON.stringify(transactions));
+}
+
+// ambil data dari localStorage saat halaman dibuka
+function loadData() {
+  const savedData = localStorage.getItem("transactions");
+  if (savedData) {
+    transactions = JSON.parse(savedData);
+  }
+}
+
+/* =========================
+   INIT DATA
+========================= */
+loadData();
+
+/* =========================
+   CHART
+========================= */
 const ctx = document.getElementById("financeChart").getContext("2d");
+
 const financeChart = new Chart(ctx, {
   type: "doughnut",
   data: {
     labels: ["Income", "Expense"],
-    datasets: [{
-      data: [0, 0],
-      backgroundColor: ["#16a34a", "#dc2626"]
-    }]
+    datasets: [
+      {
+        data: [0, 0],
+        backgroundColor: ["#16a34a", "#dc2626"]
+      }
+    ]
   }
 });
 
-// Event: Klik tombol Add Transaction
+/* =========================
+   ADD TRANSACTION
+========================= */
 submitBtn.addEventListener("click", function () {
   const type = document.getElementById("type").value;
   const category = document.getElementById("category").value.trim();
@@ -38,24 +63,35 @@ submitBtn.addEventListener("click", function () {
   const amount = parseFloat(document.getElementById("amount").value);
   const notes = document.getElementById("notes").value.trim();
 
-  // Validasi
-  if (!category || !description || isNaN(amount) || amount <= 0) {
+  // Validasi (FIXED)
+  if (!category  !description  isNaN(amount) || amount <= 0) {
     alert("Harap isi semua field dengan benar!");
     return;
   }
 
   // Tambah transaksi
-  transactions.push({ type, category, description, amount, notes });
+  transactions.push({
+    type,
+    category,
+    description,
+    amount,
+    notes
+  });
+
+  // simpan + render
+  saveData();
   renderData();
 
-  // Reset input
+  // reset input
   document.getElementById("category").value = "";
   document.getElementById("description").value = "";
   document.getElementById("amount").value = "";
   document.getElementById("notes").value = "";
 });
 
-// Fungsi render data ke tabel & summary
+/* =========================
+   RENDER DATA
+========================= */
 function renderData() {
   table.innerHTML = "";
 
@@ -70,6 +106,7 @@ function renderData() {
     }
 
     const row = document.createElement("tr");
+
     row.innerHTML = `
       <td class="p-2">${t.type}</td>
       <td class="p-2">${t.category}</td>
@@ -78,33 +115,42 @@ function renderData() {
         Rp ${t.amount.toLocaleString()}
       </td>
       <td class="p-2">${t.notes}</td>
-      <td class="p-2">
+      <td class="p-2 text-center">
         <button onclick="deleteTransaction(${index})"
           class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 flex items-center gap-1 mx-auto">
           <i data-feather="trash-2" class="w-4 h-4"></i>
         </button>
       </td>
     `;
+
     table.appendChild(row);
   });
 
-  // Update summary
+  // update summary
   totalIncomeEl.textContent = "Rp " + totalIncome.toLocaleString();
   totalExpenseEl.textContent = "Rp " + totalExpense.toLocaleString();
   netProfitEl.textContent = "Rp " + (totalIncome - totalExpense).toLocaleString();
 
-  // Update chart
+  // update chart
   financeChart.data.datasets[0].data = [totalIncome, totalExpense];
   financeChart.update();
 
-  // Re-render feather icons (karena row baru ditambahkan)
+  // re-render icons
   feather.replace();
 }
 
-// Fungsi hapus transaksi
+/* =========================
+   DELETE TRANSACTION
+========================= */
 function deleteTransaction(index) {
   if (confirm("Yakin ingin hapus transaksi ini?")) {
     transactions.splice(index, 1);
+    saveData();
     renderData();
   }
 }
+
+/* =========================
+   FIRST LOAD RENDER
+========================= */
+renderData();
