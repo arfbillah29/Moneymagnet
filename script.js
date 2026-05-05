@@ -64,10 +64,10 @@ submitBtn.addEventListener("click", function () {
   const notes = document.getElementById("notes").value.trim();
 
   // Validasi (FIXED)
-  if (!category  !description  isNaN(amount) || amount <= 0) {
-    alert("Harap isi semua field dengan benar!");
-    return;
-  }
+  if (!category || !description  isNaN(amount) || amount <= 0) {
+  alert("Harap isi semua field dengan benar!");
+  return;
+}
 
   // Tambah transaksi
   transactions.push({
