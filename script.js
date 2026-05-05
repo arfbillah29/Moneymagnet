@@ -12,6 +12,10 @@ const netProfitEl = document.getElementById("netProfit");
 
 // Array simpan transaksi
 let transactions = [];
+     function saveData() {
+       localStorage.setItem("Transaction", JSON.stringify(transaction));
+     }
+saveData();
 
 // Inisialisasi Chart
 const ctx = document.getElementById("financeChart").getContext("2d");
